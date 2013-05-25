@@ -1,9 +1,5 @@
 package rickflail.mpc.remote;
 
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -13,14 +9,13 @@ import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.Display;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
+import android.view.*;
 import android.view.View.OnClickListener;
 import android.widget.*;
-import android.view.WindowManager;
+
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MPC_RemoteActivity extends Activity {
 
@@ -69,7 +64,29 @@ public class MPC_RemoteActivity extends Activity {
 	
 	LinearLayout main;
 	LinearLayout areaExtra;
-	
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int action = event.getAction();
+        int keyCode = event.getKeyCode();
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                if (action == KeyEvent.ACTION_UP) {
+                    directSendCommand(getString(R.string.volup));
+                }
+                return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    sendCommandTask = new SendCommandTask();
+                    sendCommandTask.execute(getString(R.string.voldown));
+                }
+                return true;
+            default:
+            return super.dispatchKeyEvent(event);
+        }
+
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -224,12 +241,16 @@ public class MPC_RemoteActivity extends Activity {
     public OnClickListener sendCommand(final String command) {
     	return new View.OnClickListener() {
     		public void onClick(View view) {
-    			sendCommandTask = new SendCommandTask();
-    			sendCommandTask.execute(command);
+                directSendCommand(command);
     		}
     	};
     }
-    
+
+    private void directSendCommand(String command) {
+        sendCommandTask = new SendCommandTask();
+        sendCommandTask.execute(command);
+    }
+
     public OnClickListener retryListener() {
     	return new View.OnClickListener() {
     		public void onClick(View view) {
