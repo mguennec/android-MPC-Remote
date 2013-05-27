@@ -18,8 +18,9 @@
 	
 	<string name="next">922</string>
 	<string name="prev">921</string>
-	
-	<string name="subtitles">956</string>
+
+    <string name="subtitles">956</string>
+    <string name="audio">952</string>
 	<string name="fullscreen">830</string>
 	<string name="screenshot">807</string>
 

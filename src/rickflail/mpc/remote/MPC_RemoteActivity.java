@@ -29,7 +29,6 @@ public class MPC_RemoteActivity extends Activity {
 	
 	SharedPreferences prefs;
 	Handler resultsTimer;
-	SendCommandTask sendCommandTask;
 	GetVarsTask getVarsTask;
 	
 	Intent settingsIntent;
@@ -50,8 +49,9 @@ public class MPC_RemoteActivity extends Activity {
 	
 	ImageButton btnFullscreen;
 	ImageButton btnScreenshot;
-	ImageButton btnSubtitles;
-	ImageButton btnFramestep;
+    ImageButton btnSubtitles;
+    ImageButton btnAudio;
+    ImageButton btnFramestep;
 	
 	Button btnRetry;
 
@@ -65,6 +65,8 @@ public class MPC_RemoteActivity extends Activity {
 	LinearLayout main;
 	LinearLayout areaExtra;
 
+    Communication communication;
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int action = event.getAction();
@@ -77,8 +79,7 @@ public class MPC_RemoteActivity extends Activity {
                 return true;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
                 if (action == KeyEvent.ACTION_DOWN) {
-                    sendCommandTask = new SendCommandTask();
-                    sendCommandTask.execute(getString(R.string.voldown));
+                    directSendCommand(getString(R.string.voldown));
                 }
                 return true;
             default:
@@ -94,6 +95,7 @@ public class MPC_RemoteActivity extends Activity {
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
         
         setContentView(R.layout.main);
+
         
         settingsIntent = new Intent(this, MPC_RemoteSettingsActivity.class);
         
@@ -134,6 +136,9 @@ public class MPC_RemoteActivity extends Activity {
 
         btnSubtitles = (ImageButton) findViewById(R.id.buttonSubtitles);
         btnSubtitles.setOnClickListener(sendCommand(getString(R.string.subtitles)));
+
+        btnAudio = (ImageButton) findViewById(R.id.buttonAudio);
+        btnAudio.setOnClickListener(sendCommand(getString(R.string.audio)));
         
         btnFramestep = (ImageButton) findViewById(R.id.buttonFramestep);
         btnFramestep.setOnClickListener(sendCommand(getString(R.string.stepforward)));
@@ -169,7 +174,8 @@ public class MPC_RemoteActivity extends Activity {
     	prefs = getSharedPreferences(getString(R.string.app_settings_file), Context.MODE_PRIVATE);
         server = prefs.getString("server", "unset");
         port = prefs.getString("port", "unset");
-        
+
+        communication = new Communication(server, port);
         if (server == "unset" || port == "unset") {
         	startActivity(settingsIntent);        	
         	return;
@@ -247,8 +253,7 @@ public class MPC_RemoteActivity extends Activity {
     }
 
     private void directSendCommand(String command) {
-        sendCommandTask = new SendCommandTask();
-        sendCommandTask.execute(command);
+        new SendCommandTask().execute(command);
     }
 
     public OnClickListener retryListener() {
@@ -288,11 +293,12 @@ public class MPC_RemoteActivity extends Activity {
 
     	@Override
     	protected String doInBackground(String... commands) {
-    		Communication comm = new Communication(server, port);
     		String html = "";
     		
     		for (int i = 0; i < commands.length; i++) {
-    			 html += comm.sendCommand(commands[i]);
+                if (communication != null) {
+    			    html += communication.sendCommand(commands[i]);
+                }
     		}
     		
     		return html;
@@ -335,8 +341,7 @@ public class MPC_RemoteActivity extends Activity {
 
     	@Override
     	protected HashMap<String, String> doInBackground(Void... params) {
-    		Communication comm = new Communication(server, port);
-    		HashMap<String, String> values = comm.getVariables();
+    		HashMap<String, String> values = communication == null ? null : communication.getVariables();
     		return values;
     	}
     	
